@@ -1,0 +1,34 @@
+///
+This is a script which cleans the ~10GB financial information file into a smaller file with only the variables and years of interest.
+///
+import numpy as np
+import pandas as pd
+
+# specify which variables should be preserved in new financial info file
+var_list = ['sa_finance1_cocode', 'sa_finance1_year', 'sa_ann_rep_months', 'sa_total_income', 'sa_sales', 
+            'sa_total_expense', 'sa_compensation_to_employees', 'sa_salaries_bonus_pf', 'sa_staff_welfare_training_exp',
+           'sa_pat','sa_pbdita','sa_pbpt', 'sa_pbt','sa_cash_profit','sa_total_liabilities','sa_total_capital', 
+            'sa_non_current_liabilities', 'sa_other_long_term_liabilities','sa_current_liabilities', 'sa_net_worth',
+           'sa_tangible_net_worth', 'sa_lt_borrowing_central_state_go', 'sa_debt', 'sa_long_term_borrowings_incl_cur', 
+            'sa_total_assets', 'sa_intangible_ast', 'sa_land_n_building', 'sa_plant_mach_computer_elec', 
+            'sa_transport_comm_equip_infra','sa_furn_social_oth_fixed_ast']
+
+
+# read in prowess financial report information csv, preserving only variables of interest, write out to intermediate file
+
+df = pd.read_csv(r'/Users/eloiseburtis/Desktop/prowess_financial.csv', usecols = var_list)
+df.to_csv(r'/Users/eloiseburtis/Desktop/prowess_financial_vars.csv')
+
+# read in df with only vars of interest
+df2 = pd.read_csv(r'/Users/eloiseburtis/Desktop/prowess_financial_variables.csv')
+
+# generate new variable year from sa_finance1_year
+df2['year'] = df2.sa_finance1_year.str.slice(0,4)
+
+# save only observations where year is between 2016 and 2018 (inclusive)
+df2 = df2[(df2['year'] == '2016')|(df2['year'] == '2017')|(df2['year'] == '2018')] 
+
+# write out final file which contains only the necessary information
+
+df2.to_csv(r'/Users/eloiseburtis/Desktop/prowess_financial_clean.csv')
+
