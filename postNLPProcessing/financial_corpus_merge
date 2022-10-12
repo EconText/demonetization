@@ -1,0 +1,57 @@
+/* Stata file that can be used to merge financial reports text to the structured financial information using the company code
+present in the prowess database */
+
+clear
+
+//PRE-PROCESSING
+* open up the financial information from prowess for years 2016-2019, recast year as a string
+use "/Users/eloiseburtis/Desktop/Current DEMO Files/16_19_prowess_fin_clean.dta"
+tostring year ,replace
+save "/Users/eloiseburtis/Desktop/Current DEMO Files/16_19_prowess_fin_clean.dta", replace
+
+*Import the identity file, restructure the filenames to match the date file, reorder the variables to make more sense for data manipulation
+use "/Users/eloiseburtis/Desktop/Current DEMO Files/filename_basic_identity.dta"
+gen filename = FILENAME + ".txt"
+drop FILENAME
+order filename ,first
+rename MATCHINGMETHOD match_type
+order match_type ,first
+
+* Merge the file with extracted dates to the identity file, preserve all of the observations in the identity file, drop any observations that are not present in the identity file.
+merge 1:1 filename using "/Users/eloiseburtis/Desktop/Current DEMO Files/dates.dta"
+drop if _merge == 2
+drop _merge
+tostring year, replace
+tostring sa_finance1_cocode, replace
+
+* drop all of the observations that are not 2016-2019
+drop if year == "2009"
+drop if year == "2010"
+drop if year == "2011"
+drop if year == "2012"
+drop if year == "2013"
+drop if year == "2014"
+drop if year == "2015"
+
+
+* save file that contains updated identity information which includes dates extracted from the files.
+save "/Users/eloiseburtis/Desktop/Current DEMO Files/dates_identity.dta", replace
+
+
+// FINANCIAL-IDENTITY MERGE
+clear
+
+use "/Users/eloiseburtis/Desktop/Current DEMO Files/dates_identity_merged.dta"
+bysort year sa_finance1_cocode: gen count = _N
+
+tab count
+
+merge 1:m year sa_finance1_cocode using "/Users/eloiseburtis/Desktop/Current DEMO Files/16_19_prowess_fin_clean.dta"
+br if _merge == 1 //This is the result of a year mismatch.
+drop if _merge == 2
+
+bysort year sa_finance1_cocode: gen count2 = _N
+tab count2
+
+save "/Users/eloiseburtis/Desktop/Current DEMO Files/financial_filename_merged.dta", replace
+
